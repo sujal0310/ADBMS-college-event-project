@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Campus Event Engine &amp; Ticket Hub</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Smart Campus Event Engine &amp; Ticket Hub</h1>
+      <p>MongoDB-backed platform for events, club memberships, atomic ticket booking &amp; gate check-in</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-secondary" id="resetSeedBtn" title="Restore initial seed dataset">Reset Seed Data</button>
+      <span id="modePill" class="mode-pill">Connecting...</span>
+    </div>
+  </header>
+
+  <main>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="events">Events &amp; Booking</button>
+      <button class="tab-btn" data-tab="registrations">Tickets &amp; Gate Check-In</button>
+      <button class="tab-btn" data-tab="clubs">Clubs &amp; Members</button>
+      <button class="tab-btn" data-tab="analytics">Analytics Pipelines</button>
+    </div>
+
+    <!-- PANEL 1: EVENTS -->
+    <section id="panel-events" class="panel active">
+      <div class="toolbar">
+        <button class="btn btn-secondary" id="filterAllBtn">All Events</button>
+        <button class="btn btn-secondary" id="filterFreeBtn">Free &amp; &gt;50 Seats (Task 2.1)</button>
+        <button class="btn btn-secondary" id="filterCodingBtn">Tags: coding / hackathon (Task 2.2)</button>
+        <input id="tagSearchInput" type="text" placeholder="Filter by tags (e.g. ai,music)..." />
+        <input id="eventSearchInput" type="text" placeholder="Search title, venue, club..." />
+        <button class="btn" id="tagSearchBtn">Search</button>
+        <button class="btn btn-success" id="openCreateEventBtn">+ New Event</button>
+      </div>
+      <div id="eventsGrid" class="grid"></div>
+    </section>
+
+    <!-- PANEL 2: REGISTRATIONS & CHECK-IN -->
+    <section id="panel-registrations" class="panel">
+      <div class="toolbar">
+        <select id="deptFilter">
+          <option value="">All Departments</option>
+          <option value="Computer Science">Computer Science (Task 2.3)</option>
+          <option value="Electrical Engineering">Electrical Engineering</option>
+          <option value="Mechanical Engineering">Mechanical Engineering</option>
+        </select>
+        <input id="ticketCheckInInput" type="text" placeholder="Ticket ID (e.g. TICK-2026-001)" />
+        <button class="btn btn-success" id="quickCheckInBtn">Gate Check-In (Task 3.2)</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Ticket ID</th>
+              <th>Event</th>
+              <th>Student</th>
+              <th>Department</th>
+              <th>Payment</th>
+              <th>Check-In</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="registrationsTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- PANEL 3: CLUBS -->
+    <section id="panel-clubs" class="panel">
+      <div id="clubsGrid" class="grid"></div>
+    </section>
+
+    <!-- PANEL 4: ANALYTICS -->
+    <section id="panel-analytics" class="panel">
+      <div class="analytics-grid">
+        <div class="card">
+          <h3>1. Revenue per Event &amp; Club</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Event</th><th>Club</th><th>Tickets</th><th>Revenue</th></tr>
+              </thead>
+              <tbody id="revenueTable"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <h3>2. Department Participation</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Department</th><th>Registrations</th></tr>
+              </thead>
+              <tbody id="deptTable"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <h3>3. Event Turnout Rate</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Event</th><th>Checked In</th><th>Total</th><th>Turnout %</th></tr>
+              </thead>
+              <tbody id="turnoutTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- BOOK TICKET DIALOG -->
+  <dialog id="bookingDialog">
+    <form id="bookingForm" method="dialog">
+      <h3 style="margin-top:0">Book Ticket: <span id="bookEventTitle"></span></h3>
+      <input type="hidden" id="bookEventId" />
+      <div class="form-row">
+        <label for="bookStudentId">Student ID</label>
+        <input id="bookStudentId" required placeholder="e.g. STU9012" />
+      </div>
+      <div class="form-row">
+        <label for="bookStudentName">Student Name</label>
+        <input id="bookStudentName" required placeholder="e.g. Kabir Mehta" />
+      </div>
+      <div class="form-grid-2">
+        <div class="form-row">
+          <label for="bookDepartment">Department</label>
+          <select id="bookDepartment">
+            <option value="Computer Science">Computer Science</option>
+            <option value="Electrical Engineering">Electrical Engineering</option>
+            <option value="Mechanical Engineering">Mechanical Engineering</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label for="bookYear">Year</label>
+          <input id="bookYear" type="number" min="1" max="5" value="2" required />
+        </div>
+      </div>
+      <div class="form-row">
+        <label for="bookMethod">Payment Method</label>
+        <select id="bookMethod">
+          <option value="UPI">UPI</option>
+          <option value="Card">Card</option>
+          <option value="Cash">Cash</option>
+          <option value="NetBanking">NetBanking</option>
+        </select>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-secondary" id="cancelBookBtn">Cancel</button>
+        <button type="submit" class="btn">Confirm Atomic Booking</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- CREATE EVENT DIALOG -->
+  <dialog id="createEventDialog">
+    <form id="createEventForm" method="dialog">
+      <h3 style="margin-top:0">Create New Campus Event</h3>
+      <div class="form-grid-2">
+        <div class="form-row">
+          <label for="newEventId">Event ID</label>
+          <input id="newEventId" required placeholder="e.g. EVT104" />
+        </div>
+        <div class="form-row">
+          <label for="newEventCategory">Category</label>
+          <select id="newEventCategory">
+            <option value="Technical">Technical</option>
+            <option value="Cultural">Cultural</option>
+            <option value="Workshop">Workshop</option>
+            <option value="Seminar">Seminar</option>
+            <option value="Sports">Sports</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <label for="newEventTitle">Event Title</label>
+        <input id="newEventTitle" required placeholder="e.g. Cloud Native Bootcamp" />
+      </div>
+      <div class="form-grid-2">
+        <div class="form-row">
+          <label for="newEventClub">Organizer Club</label>
+          <input id="newEventClub" required placeholder="e.g. Coding Club" />
+        </div>
+        <div class="form-row">
+          <label for="newEventVenue">Venue</label>
+          <input id="newEventVenue" required placeholder="e.g. Seminar Hall 2" />
+        </div>
+      </div>
+      <div class="form-grid-2">
+        <div class="form-row">
+          <label for="newEventCapacity">Capacity</label>
+          <input id="newEventCapacity" type="number" min="1" value="100" required />
+        </div>
+        <div class="form-row">
+          <label for="newEventFee">Entry Fee (₹)</label>
+          <input id="newEventFee" type="number" min="0" value="0" required />
+        </div>
+      </div>
+      <div class="form-row">
+        <label for="newEventDate">Date &amp; Time</label>
+        <input id="newEventDate" type="datetime-local" required />
+      </div>
+      <div class="form-grid-2">
+        <div class="form-row">
+          <label for="newEventCoordName">Coordinator Name</label>
+          <input id="newEventCoordName" required placeholder="e.g. Neha Kulkarni" />
+        </div>
+        <div class="form-row">
+          <label for="newEventCoordEmail">Coordinator Contact</label>
+          <input id="newEventCoordEmail" required placeholder="e.g. neha@college.edu" />
+        </div>
+      </div>
+      <div class="form-row">
+        <label for="newEventTags">Tags (comma-separated)</label>
+        <input id="newEventTags" placeholder="e.g. cloud, devops, workshop" />
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-secondary" id="cancelCreateEventBtn">Cancel</button>
+        <button type="submit" class="btn btn-success">Create Event</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ADD CLUB MEMBER DIALOG -->
+  <dialog id="addMemberDialog">
+    <form id="addMemberForm" method="dialog">
+      <h3 style="margin-top:0">Add Member to <span id="memberClubName"></span></h3>
+      <input type="hidden" id="memberClubId" />
+      <div class="form-grid-2">
+        <div class="form-row">
+          <label for="memberStudentId">Student ID</label>
+          <input id="memberStudentId" required placeholder="e.g. STU9100" />
+        </div>
+        <div class="form-row">
+          <label for="memberYear">Year</label>
+          <input id="memberYear" type="number" min="1" max="5" value="2" required />
+        </div>
+      </div>
+      <div class="form-row">
+        <label for="memberName">Student Name</label>
+        <input id="memberName" required placeholder="e.g. Siddharth Joshi" />
+      </div>
+      <div class="form-grid-2">
+        <div class="form-row">
+          <label for="memberDepartment">Department</label>
+          <select id="memberDepartment">
+            <option value="Computer Science">Computer Science</option>
+            <option value="Electrical Engineering">Electrical Engineering</option>
+            <option value="Mechanical Engineering">Mechanical Engineering</option>
+            <option value="Fine Arts">Fine Arts</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label for="memberRole">Role</label>
+          <select id="memberRole">
+            <option value="Member">Member</option>
+            <option value="Core">Core</option>
+            <option value="Coordinator">Coordinator</option>
+            <option value="President">President</option>
+          </select>
+        </div>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-secondary" id="cancelAddMemberBtn">Cancel</button>
+        <button type="submit" class="btn">Add Member</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="./app.js"></script>
+</body>
+</html>

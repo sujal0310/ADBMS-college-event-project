@@ -1,0 +1,19 @@
+{
+  "name": "smart-campus-event-hub",
+  "version": "1.0.0",
+  "description": "Smart Campus Event Engine & Ticket Hub powered by MongoDB and Express",
+  "main": "backend/src/server.js",
+  "scripts": {
+    "start": "node backend/src/server.js",
+    "dev": "node --watch backend/src/server.js",
+    "seed": "node backend/src/scripts/seed.js",
+    "seed:mongosh": "mongosh database/01_schema_and_indexes.js && mongosh database/02_seed_data.js",
+    "queries:mongosh": "mongosh database/03_queries_and_updates.js",
+    "analytics:mongosh": "mongosh database/04_analytics_pipelines.js",
+    "test": "node --test backend/src/tests/*.test.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "mongodb": "^6.12.0"
+  }
+}
